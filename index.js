@@ -2,68 +2,79 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const url = require('url');
+
 const PORT = 3000;
 
-// Database connection settings
+// Database configuration
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: '',
-    database: 'todolist',
+    password: '', // ваш пароль MySQL
+    database: 'todolist'
 };
 
-async function retrieveListItems() {
-    try {
-        const connection = await mysql.createConnection(dbConfig);
-        const query = 'SELECT id, text FROM items ORDER BY id DESC';
-        const [rows] = await connection.execute(query);
-        await connection.end();
-        return rows;
-    } catch (error) {
-        console.error('Error retrieving list items:', error);
-        throw error;
-    }
+// Create database connection pool
+const pool = mysql.createPool(dbConfig);
+
+// Get all items
+async function getItems() {
+    const [rows] = await pool.query('SELECT * FROM items ORDER BY id DESC');
+    return rows;
 }
 
-async function addListItem(text) {
-    try {
-        const connection = await mysql.createConnection(dbConfig);
-        const query = 'INSERT INTO items (text) VALUES (?)';
-        const [result] = await connection.execute(query, [text]);
-        await connection.end();
-        return { id: result.insertId, text };
-    } catch (error) {
-        console.error('Error adding list item:', error);
-        throw error;
-    }
+// Add new item
+async function addItem(text) {
+    const [result] = await pool.query('INSERT INTO items (text) VALUES (?)', [text]);
+    return { id: result.insertId, text };
 }
 
+// Delete item
+async function deleteItem(id) {
+    await pool.query('DELETE FROM items WHERE id = ?', [id]);
+    return true;
+}
+
+// Generate HTML rows
+async function generateHtmlRows() {
+    const items = await getItems();
+    return items.map(item => `
+        <tr data-id="${item.id}">
+            <td>${item.id}</td>
+            <td>${item.text}</td>
+            <td>
+                <button class="delete-btn" onclick="deleteItem(${item.id})">×</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Handle HTTP requests
 async function handleRequest(req, res) {
-    if (req.method === 'GET' && req.url === '/') {
+    const parsedUrl = url.parse(req.url, true);
+
+    // Serve HTML
+    if (req.method === 'GET' && parsedUrl.pathname === '/') {
         try {
-            const html = await fs.promises.readFile(
-                path.join(__dirname, 'index.html'), 
-                'utf8'
-            );
-            const processedHtml = html.replace('{{rows}}', await getHtmlRows());
+            const html = await fs.promises.readFile(path.join(__dirname, 'index.html'), 'utf8');
+            const processedHtml = html.replace('{{rows}}', await generateHtmlRows());
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(processedHtml);
         } catch (err) {
             console.error(err);
             res.writeHead(500, { 'Content-Type': 'text/plain' });
-            res.end('Error loading index.html');
+            res.end('Server Error');
         }
-    } 
-    else if (req.method === 'POST' && req.url === '/add') {
+    }
+    // Add item API
+    else if (req.method === 'POST' && parsedUrl.pathname === '/api/items') {
         let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
+        req.on('data', chunk => body += chunk.toString());
         req.on('end', async () => {
             try {
                 const { text } = JSON.parse(body);
-                const newItem = await addListItem(text);
-                res.writeHead(200, { 'Content-Type': 'application/json' });
+                const newItem = await addItem(text);
+                res.writeHead(201, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(newItem));
             } catch (error) {
                 console.error(error);
@@ -72,22 +83,26 @@ async function handleRequest(req, res) {
             }
         });
     }
+    // Delete item API
+    else if (req.method === 'DELETE' && parsedUrl.pathname === '/api/items') {
+        const id = parsedUrl.query.id;
+        try {
+            await deleteItem(id);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+            console.error(error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Failed to delete item' }));
+        }
+    }
+    // Other routes
     else {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Route not found');
+        res.end('Not Found');
     }
 }
 
-async function getHtmlRows() {
-    const todoItems = await retrieveListItems();
-    return todoItems.map(item => `
-        <tr data-id="${item.id}">
-            <td>${item.id}</td>
-            <td>${item.text}</td>
-            <td><button class="delete-btn" onclick="removeItem(${item.id})">×</button></td>
-        </tr>
-    `).join('');
-}
-
+// Start server
 const server = http.createServer(handleRequest);
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
