@@ -7,11 +7,13 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
         }
         #todoList {
             border-collapse: collapse;
             width: 70%;
-            margin: 0 auto;
+            margin: 20px auto;
         }
         #todoList th, #todoList td {
             border: 1px solid #ddd;
@@ -22,35 +24,64 @@
             background-color: #f0f0f0;
         }
         #todoList th:first-child, #todoList th:last-child {
-            width: 5%;
+            width: 10%;
         }
         #todoList th:nth-child(2) {
-            width: 90%;
+            width: 70%;
         }
         .add-form {
-            margin-top: 20px;
             width: 70%;
-            margin: 20px auto;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
         }
-        .add-form input[type="text"] {
+        .add-form input {
+            flex-grow: 1;
             padding: 8px;
-            width: 70%;
+            font-size: 16px;
         }
         .add-form button {
-            padding: 8px;
-            width: 20%;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .add-form button:hover {
+            background-color: #45a049;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
         }
     </style>
 </head>
 <body>
 
-<h2 style="text-align: center;">To-Do List</h2>
+<h2>To-Do List</h2>
+
+<div class="add-form">
+    <input type="text" id="newItem" placeholder="Enter new task...">
+    <button id="addBtn">Add</button>
+</div>
 
 <table id="todoList">
     <thead>
         <tr>
-            <th>Number</th>
-            <th>Text</th>
+            <th>ID</th>
+            <th>Task</th>
             <th>Action</th>
         </tr>
     </thead>
@@ -59,44 +90,85 @@
     </tbody>
 </table>
 
-<div class="add-form">
-    <input type="text" id="newItem" placeholder="Enter new item">
-    <button onclick="addItem()">Add</button>
-</div>
-
 <script>
-    let items = [];
-    let nextId = 1;
-
-    function renderList() {
-        const listBody = document.getElementById('listBody');
-        listBody.innerHTML = '';
-
-        items.forEach((item, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.text}</td>
-                <td><button onclick="removeItem(${index})">Remove</button></td>
-            `;
-            listBody.appendChild(row);
-        });
-    }
-
-    function addItem() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const addBtn = document.getElementById('addBtn');
         const newItemInput = document.getElementById('newItem');
-        const newItemText = newItemInput.value.trim();
+        
+        // Add item when button is clicked
+        addBtn.addEventListener('click', addItem);
+        
+        // Also add item when Enter key is pressed
+        newItemInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addItem();
+            }
+        });
+    });
 
-        if (newItemText) {
-            items.push({ id: nextId++, text: newItemText });
+    async function addItem() {
+        const newItemInput = document.getElementById('newItem');
+        const text = newItemInput.value.trim();
+        
+        if (!text) {
+            alert('Please enter a task');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text })
+            });
+            
+            if (!response.ok) throw new Error('Failed to add item');
+            
+            const newItem = await response.json();
+            
+            // Add new item to the table without reloading
+            const tbody = document.getElementById('listBody');
+            const row = document.createElement('tr');
+            row.dataset.id = newItem.id;
+            row.innerHTML = `
+                <td>${newItem.id}</td>
+                <td>${newItem.text}</td>
+                <td><button class="delete-btn" onclick="removeItem(${newItem.id})">×</button></td>
+            `;
+            
+            // Insert at the top of the table
+            tbody.insertBefore(row, tbody.firstChild);
+            
+            // Clear input field
             newItemInput.value = '';
-            renderList();
+            newItemInput.focus();
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error adding task. Please try again.');
         }
     }
 
-    function removeItem(index) {
-        items.splice(index, 1);
-        renderList();
+    async function removeItem(id) {
+        if (!confirm('Are you sure you want to delete this task?')) return;
+        
+        try {
+            const response = await fetch(`/delete?id=${id}`, {
+                method: 'POST'
+            });
+            
+            if (!response.ok) throw new Error('Failed to delete item');
+            
+            // Remove item from the table
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            if (row) row.remove();
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error deleting task. Please try again.');
+        }
     }
 </script>
 
