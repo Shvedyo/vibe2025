@@ -1,5 +1,21 @@
 {
+  "name": "todolist",
+  "version": "1.0.0",
+  "description": "To-Do List with Telegram integration",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
-    "mysql2": "^3.14.0"
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.6.0",
+    "node-telegram-bot-api": "^0.61.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
