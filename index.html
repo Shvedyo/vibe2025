@@ -1,104 +1,913 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List</title>
+    <title>TaskMaster</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
         }
-        #todoList {
-            border-collapse: collapse;
-            width: 70%;
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .app-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .app-title {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .app-subtitle {
+            color: var(--gray);
+            font-weight: 300;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .auth-container {
+            max-width: 500px;
             margin: 0 auto;
         }
-        #todoList th, #todoList td {
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--gray);
+            transition: all 0.3s ease;
+        }
+        
+        .auth-tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .auth-content {
+            display: none;
+        }
+        
+        .auth-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
             border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border 0.3s ease;
         }
-        #todoList th {
-            background-color: #f0f0f0;
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
         }
-        #todoList th:first-child, #todoList th:last-child {
-            width: 5%;
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
         }
-        #todoList th:nth-child(2) {
-            width: 90%;
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
         }
-        .add-form {
-            margin-top: 20px;
-            width: 70%;
-            margin: 20px auto;
+        
+        .btn-primary:hover {
+            background-color: var(--secondary);
         }
-        .add-form input[type="text"] {
-            padding: 8px;
-            width: 70%;
+        
+        .btn-block {
+            display: block;
+            width: 100%;
         }
-        .add-form button {
-            padding: 8px;
-            width: 20%;
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .user-details {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        .user-email {
+            font-size: 14px;
+            color: var(--gray);
+        }
+        
+        .btn-logout {
+            background-color: var(--light);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .btn-logout:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-telegram {
+            background-color: #0088cc;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-telegram i {
+            margin-right: 8px;
+        }
+        
+        .btn-telegram:hover {
+            background-color: #0077b3;
+        }
+        
+        .task-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .task-input {
+            flex: 1;
+        }
+        
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.05);
+        }
+        
+        .task-item:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .task-number {
+            font-weight: 500;
+            color: var(--gray);
+            min-width: 30px;
+        }
+        
+        .task-text {
+            flex: 1;
+            padding: 0 15px;
+            word-break: break-word;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--light);
+            color: var(--gray);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-action:hover {
+            transform: scale(1.1);
+        }
+        
+        .btn-edit {
+            color: var(--warning);
+        }
+        
+        .btn-edit:hover {
+            background-color: rgba(248, 150, 30, 0.1);
+        }
+        
+        .btn-delete {
+            color: var(--danger);
+        }
+        
+        .btn-delete:hover {
+            background-color: rgba(247, 37, 133, 0.1);
+        }
+        
+        .btn-save {
+            color: var(--success);
+        }
+        
+        .btn-save:hover {
+            background-color: rgba(76, 201, 240, 0.1);
+        }
+        
+        .edit-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 0 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+        
+        .empty-state p {
+            font-size: 18px;
+        }
+        
+        .error-message {
+            color: var(--danger);
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: rgba(247, 37, 133, 0.1);
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .success-message {
+            color: var(--success);
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: rgba(76, 201, 240, 0.1);
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .app-title {
+                font-size: 2rem;
+            }
+            
+            .task-form {
+                flex-direction: column;
+            }
+            
+            .task-actions {
+                flex-direction: column;
+            }
+            
+            .user-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .user-details {
+                margin-bottom: 15px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header class="app-header">
+            <h1 class="app-title">TaskMaster</h1>
+            <p class="app-subtitle">Умный список дел с Telegram интеграцией</p>
+        </header>
+        
+        <div id="authContainer" class="auth-container card">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchTab('login')">Вход</div>
+                <div class="auth-tab" onclick="switchTab('register')">Регистрация</div>
+            </div>
+            
+            <div id="loginContent" class="auth-content active">
+                <div class="form-group">
+                    <input type="email" id="loginEmail" class="form-control" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Пароль" required>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="login()">Войти</button>
+            </div>
+            
+            <div id="registerContent" class="auth-content">
+                <div class="form-group">
+                    <input type="email" id="registerEmail" class="form-control" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="registerPassword" class="form-control" placeholder="Пароль (минимум 6 символов)" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="registerFirstName" class="form-control" placeholder="Имя" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="registerLastName" class="form-control" placeholder="Фамилия (необязательно)">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="register()">Зарегистрироваться</button>
+            </div>
+        </div>
+        
+        <div id="userInfo" class="user-info" style="display: none;">
+            <div class="user-details">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div>
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-email" id="userEmail"></div>
+                </div>
+            </div>
+            <div>
+                <button id="telegramLink" class="btn btn-telegram" onclick="linkTelegramAccount()" style="margin-bottom: 10px;">
+                    <i class="fab fa-telegram"></i> Привязать Telegram
+                </button>
+                <button class="btn btn-logout" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+        
+        <div id="todoApp" class="card" style="display: none;">
+            <div class="task-form">
+                <input type="text" id="newItem" class="form-control task-input" placeholder="Добавить новую задачу..." autocomplete="off">
+                <button class="btn btn-primary" onclick="addItem()"><i class="fas fa-plus"></i> Добавить</button>
+            </div>
+            
+            <div id="taskMessages"></div>
+            
+            <ul class="task-list" id="listBody">
+                <!-- Tasks will be loaded here -->
+            </ul>
+            
+            <div id="emptyState" class="empty-state">
+                <i class="fas fa-tasks"></i>
+                <p>У вас пока нет задач. Добавьте первую!</p>
+            </div>
+        </div>
+    </div>
 
-<h2 style="text-align: center;">To-Do List</h2>
-
-<table id="todoList">
-    <thead>
-        <tr>
-            <th>Number</th>
-            <th>Text</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="listBody">
-        {{rows}}
-    </tbody>
-</table>
-
-<div class="add-form">
-    <input type="text" id="newItem" placeholder="Enter new item">
-    <button onclick="addItem()">Add</button>
-</div>
-
-<script>
-    let items = [];
-    let nextId = 1;
-
-    function renderList() {
-        const listBody = document.getElementById('listBody');
-        listBody.innerHTML = '';
-
-        items.forEach((item, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.text}</td>
-                <td><button onclick="removeItem(${index})">Remove</button></td>
-            `;
-            listBody.appendChild(row);
+    <script>
+        let currentUser = null;
+        let authToken = null;
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            
+            // Handle Enter key in task input
+            document.getElementById('newItem').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addItem();
+                }
+            });
         });
-    }
-
-    function addItem() {
-        const newItemInput = document.getElementById('newItem');
-        const newItemText = newItemInput.value.trim();
-
-        if (newItemText) {
-            items.push({ id: nextId++, text: newItemText });
-            newItemInput.value = '';
-            renderList();
+        
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.auth-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'login') {
+                document.querySelector('.auth-tab:nth-child(1)').classList.add('active');
+                document.getElementById('loginContent').classList.add('active');
+            } else {
+                document.querySelector('.auth-tab:nth-child(2)').classList.add('active');
+                document.getElementById('registerContent').classList.add('active');
+            }
         }
-    }
-
-    function removeItem(index) {
-        items.splice(index, 1);
-        renderList();
-    }
-</script>
-
+        
+        // Show error message
+        function showError(message) {
+            const messagesDiv = document.getElementById('taskMessages');
+            const errorElement = document.createElement('div');
+            errorElement.className = 'error-message';
+            errorElement.textContent = message;
+            
+            // Clear previous messages
+            messagesDiv.innerHTML = '';
+            messagesDiv.appendChild(errorElement);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorElement.remove();
+            }, 5000);
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            const messagesDiv = document.getElementById('taskMessages');
+            const successElement = document.createElement('div');
+            successElement.className = 'success-message';
+            successElement.textContent = message;
+            
+            // Clear previous messages
+            messagesDiv.innerHTML = '';
+            messagesDiv.appendChild(successElement);
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                successElement.remove();
+            }, 3000);
+        }
+        
+        // Update user info display
+        function updateUserInfo(user) {
+            const userName = `${user.firstName} ${user.lastName || ''}`;
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userEmail').textContent = user.email;
+            
+            // Create avatar from initials
+            const avatar = document.getElementById('userAvatar');
+            const initials = (user.firstName.charAt(0) + (user.lastName ? user.lastName.charAt(0) : '')).toUpperCase();
+            avatar.textContent = initials;
+            
+            // Show/hide Telegram link
+            document.getElementById('telegramLink').style.display = user.telegramLinked ? 'none' : 'inline-block';
+        }
+        
+        // Check authentication status
+        async function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+            
+            try {
+                const response = await fetch('/auth/check', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.authenticated) {
+                    authToken = token;
+                    currentUser = data.user;
+                    
+                    document.getElementById('authContainer').style.display = 'none';
+                    document.getElementById('userInfo').style.display = 'flex';
+                    document.getElementById('todoApp').style.display = 'block';
+                    
+                    updateUserInfo(data.user);
+                    await loadTasks();
+                } else {
+                    localStorage.removeItem('authToken');
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                localStorage.removeItem('authToken');
+            }
+        }
+        
+        // Login function
+        async function login() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showError('Пожалуйста, заполните все поля');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка входа');
+                }
+                
+                authToken = data.token;
+                currentUser = data.user;
+                
+                localStorage.setItem('authToken', authToken);
+                
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('todoApp').style.display = 'block';
+                
+                updateUserInfo(data.user);
+                await loadTasks();
+                
+                showSuccess('Вход выполнен успешно');
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Ошибка при входе');
+            }
+        }
+        
+        // Register function
+        async function register() {
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const firstName = document.getElementById('registerFirstName').value.trim();
+            const lastName = document.getElementById('registerLastName').value.trim();
+            
+            if (!email || !password || !firstName) {
+                showError('Пожалуйста, заполните обязательные поля');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Пароль должен содержать минимум 6 символов');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        firstName: firstName,
+                        lastName: lastName
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка регистрации');
+                }
+                
+                authToken = data.token;
+                currentUser = data.user;
+                
+                localStorage.setItem('authToken', authToken);
+                
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('todoApp').style.display = 'block';
+                
+                updateUserInfo(data.user);
+                await loadTasks();
+                
+                showSuccess('Регистрация прошла успешно');
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError(error.message || 'Ошибка при регистрации');
+            }
+        }
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('authToken');
+            authToken = null;
+            currentUser = null;
+            
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('todoApp').style.display = 'none';
+            
+            // Reset form fields
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('registerEmail').value = '';
+            document.getElementById('registerPassword').value = '';
+            document.getElementById('registerFirstName').value = '';
+            document.getElementById('registerLastName').value = '';
+            
+            // Switch to login tab
+            switchTab('login');
+        }
+        
+        // Link Telegram account
+        function linkTelegramAccount() {
+            const width = 600;
+            const height = 600;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+            
+            window.open('/telegram-login', 'TelegramLogin', 
+                `width=${width},height=${height},left=${left},top=${top}`);
+        }
+        
+        // Handle Telegram auth callback from popup
+        window.addEventListener('message', async (event) => {
+            if (event.data.type === 'telegram-auth') {
+                try {
+                    const response = await fetch('/telegram-callback', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            user: event.data.user
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ошибка привязки Telegram');
+                    }
+                    
+                    currentUser.telegramLinked = true;
+                    updateUserInfo(currentUser);
+                    showSuccess('Telegram аккаунт успешно привязан');
+                } catch (error) {
+                    console.error('Telegram link error:', error);
+                    showError(error.message || 'Ошибка при привязке Telegram');
+                }
+            }
+        });
+        
+        // Load tasks
+        async function loadTasks() {
+            try {
+                const response = await fetch('/list', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка загрузки задач');
+                }
+                
+                const listBody = document.getElementById('listBody');
+                listBody.innerHTML = data.html || '';
+                
+                document.getElementById('emptyState').style.display = 
+                    data.count > 0 ? 'none' : 'block';
+            } catch (error) {
+                console.error('Load tasks error:', error);
+                showError(error.message || 'Ошибка загрузки задач');
+            }
+        }
+        
+        // Add new item
+        async function addItem() {
+            const input = document.getElementById('newItem');
+            const text = input.value.trim();
+            
+            if (!text) {
+                showError('Введите текст задачи');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        text: text
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка добавления задачи');
+                }
+                
+                input.value = '';
+                
+                const listBody = document.getElementById('listBody');
+                listBody.innerHTML = data.html;
+                
+                document.getElementById('emptyState').style.display = 'none';
+                showSuccess('Задача добавлена');
+            } catch (error) {
+                console.error('Add item error:', error);
+                showError(error.message || 'Ошибка добавления задачи');
+            }
+        }
+        
+        // Delete task
+        async function deleteTask(id) {
+            try {
+                const response = await fetch(`/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка удаления задачи');
+                }
+                
+                const listBody = document.getElementById('listBody');
+                listBody.innerHTML = data.html;
+                
+                document.getElementById('emptyState').style.display = 
+                    data.count > 0 ? 'none' : 'block';
+                
+                showSuccess('Задача удалена');
+            } catch (error) {
+                console.error('Delete task error:', error);
+                showError(error.message || 'Ошибка удаления задачи');
+            }
+        }
+        
+        // Enable edit mode for task
+        function enableEdit(id, currentText) {
+            const taskElement = document.getElementById(`task-${id}`);
+            if (!taskElement) return;
+            
+            taskElement.innerHTML = `
+                <div class="task-number">#</div>
+                <input type="text" class="edit-input" value="${currentText.replace(/"/g, '&quot;')}">
+                <div class="task-actions">
+                    <button class="btn-action btn-save" onclick="saveTask(${id})">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="cancelEdit(${id}, '${currentText.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            taskElement.querySelector('.edit-input').focus();
+        }
+        
+        // Cancel edit mode
+        function cancelEdit(id, originalText) {
+            const taskElement = document.getElementById(`task-${id}`);
+            if (!taskElement) return;
+            
+            const index = Array.from(taskElement.parentNode.children).indexOf(taskElement) + 1;
+            
+            taskElement.innerHTML = `
+                <div class="task-number">${index}</div>
+                <div class="task-text">${originalText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+                <div class="task-actions">
+                    <button class="btn-action btn-edit" onclick="enableEdit(${id}, '${originalText.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-action btn-delete" onclick="deleteTask(${id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Save edited task
+        async function saveTask(id) {
+            const taskElement = document.getElementById(`task-${id}`);
+            if (!taskElement) return;
+            
+            const input = taskElement.querySelector('.edit-input');
+            const newText = input.value.trim();
+            
+            if (!newText) {
+                showError('Текст задачи не может быть пустым');
+                input.focus();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/edit/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        text: newText
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Ошибка сохранения задачи');
+                }
+                
+                const listBody = document.getElementById('listBody');
+                listBody.innerHTML = data.html;
+                
+                showSuccess('Задача обновлена');
+            } catch (error) {
+                console.error('Save task error:', error);
+                showError(error.message || 'Ошибка сохранения задачи');
+            }
+        }
+    </script>
 </body>
 </html>
